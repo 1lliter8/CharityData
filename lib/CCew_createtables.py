@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey, For
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 import pw
+import os
 
 Base = declarative_base()
 
@@ -301,5 +302,6 @@ class BuildDB:
 
 
 if __name__ == '__main__':
-    build = BuildDB('C:\\Users\\willl\\PycharmProjects\\CharityData\\downloads\\RegPlusExtract_May_2020\\',
+    os.chdir('..')
+    build = BuildDB('downloads/RegPlusExtract_May_2020',
                      'localhost', 'CCEng', pw.us, pw.pw)
