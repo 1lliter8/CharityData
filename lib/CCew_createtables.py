@@ -15,10 +15,47 @@ class Data_Source(Base):
     source_date = Column(TIMESTAMP, nullable=False, default=func.now())
 
 
+class EW_Charity(Base):
+    __tablename__ = 'ew_charity'
+
+    regno = Column(Integer, primary_key=True)
+    subno = Column(Integer, primary_key=True)
+    name = Column(String(150))
+    orgtype = Column(String(10))
+    gd = Column(Text)
+    aob = Column(Text)
+    aob_defined = Column(Integer)
+    nhs = Column(String(1))
+    ha_no = Column(Integer)
+    corr = Column(String(255))
+    add1 = Column(String(35))
+    add2 = Column(String(35))
+    add3 = Column(String(35))
+    add4 = Column(String(35))
+    add5 = Column(String(35))
+    postcode = Column(String(8))
+    phone = Column(String(400))
+    fax = Column(Integer)
+    source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
+
+
+class EW_Name(Base):
+    __tablename__ = 'ew_name'
+
+    regno = Column(Integer)
+    subno = Column(Integer)
+    nameno = Column(Integer, primary_key=True)
+    name = Column(String(255))
+    source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
+
+    ForeignKeyConstraint(['regno', 'subno'], ['ew_charity.regno', 'ew_charity.subno'])
+
+
 class EW_Main_Charity(Base):
     __tablename__ = 'ew_main_charity'
 
-    regno = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    regno = Column(Integer)
     coyno = Column(String(50))
     trustees = Column(String(1), nullable=False)
     fyend = Column(String(4))
@@ -44,16 +81,6 @@ class EW_Aoo_Ref(Base):
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
 
 
-class EW_Name(Base):
-    __tablename__ = 'ew_name'
-
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
-    subno = Column(Integer)
-    nameno = Column(Integer, primary_key=True)
-    name = Column(String(255))
-    source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
-
-
 class EW_Class_Ref(Base):
     __tablename__ = 'ew_class_ref'
 
@@ -74,7 +101,7 @@ class EW_Acct_Submit(Base):
     __tablename__ = 'ew_acct_submit'
 
     id = Column(Integer, primary_key=True)
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
+    regno = Column(Integer)
     submit_date = Column(TIMESTAMP)
     arno = Column(String(4), nullable=False)
     fyend = Column(String(4))
@@ -85,34 +112,9 @@ class EW_Ar_Submit(Base):
     __tablename__ = 'ew_ar_submit'
 
     id = Column(Integer, primary_key=True)
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
+    regno = Column(Integer)
     arno = Column(String(4), nullable=False)
     submit_date = Column(TIMESTAMP)
-    source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
-
-
-class EW_Charity(Base):
-    __tablename__ = 'ew_charity'
-
-    id = Column(Integer, primary_key=True)
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
-    subno = Column(Integer)
-    name = Column(String(150))
-    orgtype = Column(String(10))
-    gd = Column(Text)
-    aob = Column(Text)
-    aob_defined = Column(Integer)
-    nhs = Column(String(1))
-    ha_no = Column(Integer)
-    corr = Column(String(255))
-    add1 = Column(String(35))
-    add2 = Column(String(35))
-    add3 = Column(String(35))
-    add4 = Column(String(35))
-    add5 = Column(String(35))
-    postcode = Column(String(8))
-    phone = Column(String(400))
-    fax = Column(Integer)
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
 
 
@@ -120,7 +122,7 @@ class EW_Charity_Aoo(Base):
     __tablename__ = 'ew_charity_aoo'
 
     id = Column(Integer, primary_key=True)
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
+    regno = Column(Integer)
     aootype = Column(String(10), nullable=False)
     aookey = Column(Integer, nullable=False)
     welsh = Column(String(1), nullable=False)
@@ -134,7 +136,7 @@ class EW_Class(Base):
     __tablename__ = 'ew_class'
 
     id = Column(Integer, primary_key=True)
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
+    regno = Column(Integer)
     ewclass = Column(String(10), ForeignKey('ew_class_ref.classno'), nullable=False)
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
 
@@ -143,7 +145,7 @@ class EW_Financial(Base):
     __tablename__ = 'ew_financial'
 
     id = Column(Integer, primary_key=True)
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
+    regno = Column(Integer)
     fystart = Column(TIMESTAMP)
     fyend = Column(TIMESTAMP)
     income = Column(Integer)
@@ -156,18 +158,20 @@ class EW_Objects(Base):
     __tablename__ = 'ew_objects'
 
     id = Column(Integer, primary_key=True)
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
+    regno = Column(Integer)
     subno = Column(Integer)
     seqno = Column(String(4))
     object = Column(Text)
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
+
+    ForeignKeyConstraint(['regno', 'subno'], ['ew_charity.regno', 'ew_charity.subno'])
 
 
 class EW_Overseas_Expend(Base):
     __tablename__ = 'ew_overseas_expend'
 
     id = Column(Integer, primary_key=True)
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
+    regno = Column(Integer)
     artype = Column(String(4), nullable=False)
     fystart = Column(TIMESTAMP, nullable=False)
     fyend = Column(TIMESTAMP, nullable=False)
@@ -221,7 +225,7 @@ class EW_PartB(Base):
     __tablename__ = 'ew_partb'
 
     id = Column(Integer, primary_key=True)
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
+    regno = Column(Integer)
     artype = Column(String(4), nullable=False)
     fystart = Column(TIMESTAMP, nullable=False)
     fyend = Column(TIMESTAMP, nullable=False)
@@ -274,19 +278,21 @@ class EW_Registration(Base):
     __tablename__ = 'ew_registration'
 
     id = Column(Integer, primary_key=True)
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
+    regno = Column(Integer)
     subno = Column(Integer)
     regdate = Column(TIMESTAMP)
     remdate = Column(TIMESTAMP)
     remcode = Column(String(3), ForeignKey('ew_remove_ref.code'))
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
 
+    ForeignKeyConstraint(['regno', 'subno'], ['ew_charity.regno', 'ew_charity.subno'])
+
 
 class EW_Trustee(Base):
     __tablename__ = 'ew_trustee'
 
     id = Column(Integer, primary_key=True)
-    regno = Column(Integer, ForeignKey('ew_main_charity.regno'))
+    regno = Column(Integer)
     trustee = Column(String(255))
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
 
