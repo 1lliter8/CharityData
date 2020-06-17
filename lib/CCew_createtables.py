@@ -12,7 +12,7 @@ class Data_Source(Base):
 
     source_key = Column(Integer, primary_key=True)
     source_name = Column(String(255), nullable=False)
-    source_date = Column(TIMESTAMP, nullable=False, default=func.now())
+    source_date = Column(TIMESTAMP, nullable=False, server_default=func.now(), server_onupdate=func.now())
 
 
 class EW_Charity(Base):

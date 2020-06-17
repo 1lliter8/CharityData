@@ -33,6 +33,7 @@ class PopulateEW:
         df = df.replace(r'^\s*$', np.NaN, regex=True)
         df = df.replace('\\x00', np.NaN, regex=True)
         df['source_key'] = source
+        df.index.name = 'id'
 
         try:
             df.to_sql(name, con=self.engine, if_exists='append', index=index)
@@ -47,96 +48,103 @@ class PopulateEW:
                 f2.write('\n' + readout)
             print(readout)
 
+    def gensource(self, source):
+        # Generates a source row with a string and returns its key
+        s = self.md.tables['data_source']
+        s = s.insert(bind=self.engine).\
+            values(source_name=source)
+        key = s.execute()
+        return key.inserted_primary_key[0]
+
+    def bcpimports(self):
+        # Runs all working BCP import scripts
+        source = self.gensource(os.path.split(os.path.dirname(self.wd))[-1])
+
+        self.bcptosql(file='extract_aoo_ref.bcp',
+                    name='ew_aoo_ref',
+                    headers=['aootype', 'aookey', 'aooname', 'aoosort', 'welsh', 'master'],
+                    source=source)
+
+        self.bcptosql(file='extract_charity.bcp',
+                    name='ew_charity',
+                    headers=['regno', 'subno', 'name', 'orgtype', 'gd', 'aob', 'aob_defined', 'nhs',
+                             'ha_no', 'corr', 'add1', 'add2', 'add3', 'add4', 'add5', 'postcode',
+                             'phone', 'fax'],
+                    source=source)
+
+        self.bcptosql(file='extract_name.bcp',
+                    name='ew_name',
+                    headers=['regno', 'subno', 'nameno', 'name'],
+                    source=source)
+
+        self.bcptosql(file='extract_main_charity.bcp',
+                    name='ew_main_charity',
+                    headers=['regno', 'coyno', 'trustees', 'fyend', 'welsh', 'incomedate', 'income',
+                             'grouptype', 'email', 'web'],
+                    source=source,
+                    index=True)
+
+        self.bcptosql(file='extract_class_ref.bcp',
+                    name='ew_class_ref',
+                    headers=['classno', 'classtext'],
+                    source=source)
+
+        self.bcptosql(file='extract_remove_ref.bcp',
+                    name='ew_remove_ref',
+                    headers=['code', 'text'],
+                    source=source)
+
+        self.bcptosql(file='extract_acct_submit.bcp',
+                    name='ew_acct_submit',
+                    headers=['regno', 'submit_date', 'arno', 'fyend'],
+                    source=source,
+                    index=True)
+
+        self.bcptosql(file='extract_ar_submit.bcp',
+                    name='ew_ar_submit',
+                    headers=['regno', 'arno', 'submit_date'],
+                    source=source,
+                    index=True)
+
 
 if __name__ == '__main__':
-    # TODO: Implement data_source for versioning, potentially move functions into class?
-    #   So you'd call definesource() then importbcp()
-    #   Then maybe call them both in one function so this whole script can be called
+    # TODO: Test missing imports
+    #   Consider having the main class write those methods to a list then iterating to run
+    #   That way you can show progress better?
+    #   Probably should query the table for stuff existing before doing all the heavy lifting of
+    #   building the df
     os.chdir('..')
     pop = PopulateEW('downloads/RegPlusExtract_May_2020/',
                       'localhost', 'CCEng', pw.us, pw.pw)
-    """
-    pop.bcptosql(file='extract_aoo_ref.bcp',
-                name='ew_aoo_ref',
-                headers=['aootype', 'aookey', 'aooname', 'aoosort', 'welsh', 'master'],
-                source=1)
-    """
-    """
-    pop.bcptosql(file='extract_charity.bcp',
-                name='ew_charity',
-                headers=['regno', 'subno', 'name', 'orgtype', 'gd', 'aob', 'aob_defined', 'nhs',
-                         'ha_no', 'corr', 'add1', 'add2', 'add3', 'add4', 'add5', 'postcode',
-                         'phone', 'fax'],
-                source=1)
-    """
-    """
-    pop.bcptosql(file='extract_name.bcp',
-                name='ew_name',
-                headers=['regno', 'subno', 'nameno', 'name'],
-                source=1)
-    """
-    # TODO: Start here tm
-    #  Check index optional argument solution works
-    """
-    pop.bcptosql(file='extract_main_charity.bcp',
-                name='ew_main_charity',
-                headers=['regno', 'coyno', 'trustees', 'fyend', 'welsh', 'incomedate', 'income',
-                         'grouptype', 'email', 'web'],
-                source=1,
-                index=True)
-    """
-    """
-    pop.bcptosql(file='extract_class_ref.bcp',
-                name='ew_class_ref',
-                headers=['classno', 'classtext'],
-                source=1)
-    """
-    """
-    pop.bcptosql(file='extract_remove_ref.bcp',
-                name='ew_remove_ref',
-                headers=['code', 'text'],
-                source=1)
-    """
-    """
-    pop.bcptosql(file='extract_acct_submit.bcp',
-                name='ew_acct_submit',
-                headers=['regno', 'submit_date', 'arno', 'fyend'],
-                source=1,
-                index=True)
-    """
-    """
-    pop.bcptosql(file='extract_ar_submit.bcp',
-                name='ew_ar_submit',
-                headers=['regno', 'arno', 'submit_date'],
-                source=1,
-                index=True)
-    """
+    # pop.bcpimports()
+
+    # Start here tomorrow
     """
     pop.bcptosql(file='extract_charity_aoo.bcp',
                 name='ew_charity_aoo',
                 headers=['regno', 'aootype', 'aookey', 'welsh', 'master'],
-                source=1,
+                source=4,
                 index=True)
     """
     """
     pop.bcptosql(file='extract_class.bcp',
                 name='ew_class',
                 headers=['regno', 'ewclass'],
-                source=1,
+                source=4,
                 index=True)
     """
     """
     pop.bcptosql(file='extract_financial.bcp',
                 name='ew_financial',
                 headers=['regno', 'fystart', 'fyend', 'income', 'expend'],
-                source=1,
+                source=4,
                 index=True)
     """
     """
     pop.bcptosql(file='extract_objects.bcp',
                 name='ew_objects',
                 headers=['regno', 'subno', 'seqno', 'object', 'expend'],
-                source=1,
+                source=4,
                 index=True)
     """
     """
@@ -151,7 +159,7 @@ if __name__ == '__main__':
                          'current_assets', 'credit_1', 'credit_long', 'pension_assets', 'total_assets',
                          'funds_end', 'funds_restrict', 'funds_unrestrict', 'funds_total', 'employees',
                          'volunteers', 'cons_acc', 'charity_acc'],
-                source=1,
+                source=4,
                 index=True)
     """
     """
@@ -166,20 +174,20 @@ if __name__ == '__main__':
                          'current_assets', 'credit_1', 'credit_long', 'pension_assets', 'total_assets',
                          'funds_end', 'funds_restrict', 'funds_unrestrict', 'funds_total', 'employees',
                          'volunteers', 'cons_acc', 'charity_acc'],
-                source=1,
+                source=4,
                 index=True)
     """
     """
     pop.bcptosql(file='extract_registration.bcp',
                 name='ew_registration',
                 headers=['regno', 'subno', 'regdate', 'remdate', 'remcode'],
-                source=1,
+                source=4,
                 index=True)
     """
     """
     pop.bcptosql(file='extract_trustee.bcp',
                 name='ew_trustee',
                 headers=['regno', 'trustee'],
-                source=1,
+                source=4,
                 index=True)
     """
