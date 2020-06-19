@@ -92,7 +92,8 @@ class EW_Class_Ref(Base):
 class EW_Remove_Ref(Base):
     __tablename__ = 'ew_remove_ref'
 
-    code = Column(String(3), primary_key=True)
+    id = Column(Integer, primary_key=True)
+    code = Column(String(3))
     text = Column(String(25))
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
 
@@ -282,7 +283,7 @@ class EW_Registration(Base):
     subno = Column(Integer)
     regdate = Column(TIMESTAMP)
     remdate = Column(TIMESTAMP)
-    remcode = Column(String(3), ForeignKey('ew_remove_ref.code'))
+    remcode = Column(String(3))
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
 
     ForeignKeyConstraint(['regno', 'subno'], ['ew_charity.regno', 'ew_charity.subno'])
