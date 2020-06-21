@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey, ForeignKeyConstraint, create_engine
+from sqlalchemy import Column, Integer, BigInteger, String, Text, TIMESTAMP, ForeignKey, ForeignKeyConstraint, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 import pw
@@ -66,7 +66,6 @@ class EW_Main_Charity(Base):
     email = Column(String(400))
     web = Column(String(400))
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
-
 
 
 class EW_Aoo_Ref(Base):
@@ -154,7 +153,6 @@ class EW_Financial(Base):
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
 
 
-
 class EW_Objects(Base):
     __tablename__ = 'ew_objects'
 
@@ -221,7 +219,6 @@ class EW_Overseas_Expend(Base):
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
 
 
-
 class EW_PartB(Base):
     __tablename__ = 'ew_partb'
 
@@ -230,49 +227,48 @@ class EW_PartB(Base):
     artype = Column(String(4), nullable=False)
     fystart = Column(TIMESTAMP, nullable=False)
     fyend = Column(TIMESTAMP, nullable=False)
-    inc_leg = Column(Text)
-    inc_end = Column(Text)
-    inc_vol = Column(Text)
-    inc_fr = Column(Text)
-    inc_char = Column(Text)
-    inc_invest = Column(Text)
-    inc_other = Column(Text)
-    inc_total = Column(Text)
-    invest_gain = Column(Text)
-    asset_gain = Column(Text)
-    pension_gain = Column(Text)
-    exp_vol = Column(Text)
-    exp_trade = Column(Text)
-    exp_invest = Column(Text)
-    exp_grant = Column(Text)
-    exp_charble = Column(Text)
-    exp_gov = Column(Text)
-    exp_other = Column(Text)
-    exp_total = Column(Text)
-    exp_support = Column(Text)
-    exp_dep = Column(Text)
-    reserves = Column(Text)
-    asset_open = Column(Text)
-    asset_close = Column(Text)
-    fixed_assets = Column(Text)
-    open_assets = Column(Text)
-    invest_assets = Column(Text)
-    cash_assets = Column(Text)
-    current_assets = Column(Text)
-    credit_1 = Column(Text)
-    credit_long = Column(Text)
-    pension_assets = Column(Text)
-    total_assets = Column(Text)
-    funds_end = Column(Text)
-    funds_restrict = Column(Text)
-    funds_unrestrict = Column(Text)
-    funds_total = Column(Text)
-    employees = Column(Text)
-    volunteers = Column(Text)
+    inc_leg = Column(BigInteger)
+    inc_end = Column(BigInteger)
+    inc_vol = Column(BigInteger)
+    inc_fr = Column(BigInteger)
+    inc_char = Column(BigInteger)
+    inc_invest = Column(BigInteger)
+    inc_other = Column(BigInteger)
+    inc_total = Column(BigInteger)
+    invest_gain = Column(BigInteger)
+    asset_gain = Column(BigInteger)
+    pension_gain = Column(BigInteger)
+    exp_vol = Column(BigInteger)
+    exp_trade = Column(BigInteger)
+    exp_invest = Column(BigInteger)
+    exp_grant = Column(BigInteger)
+    exp_charble = Column(BigInteger)
+    exp_gov = Column(BigInteger)
+    exp_other = Column(BigInteger)
+    exp_total = Column(BigInteger)
+    exp_support = Column(BigInteger)
+    exp_dep = Column(BigInteger)
+    reserves = Column(BigInteger)
+    asset_open = Column(BigInteger)
+    asset_close = Column(BigInteger)
+    fixed_assets = Column(BigInteger)
+    open_assets = Column(BigInteger)
+    invest_assets = Column(BigInteger)
+    cash_assets = Column(BigInteger)
+    current_assets = Column(BigInteger)
+    credit_1 = Column(BigInteger)
+    credit_long = Column(BigInteger)
+    pension_assets = Column(BigInteger)
+    total_assets = Column(BigInteger)
+    funds_end = Column(BigInteger)
+    funds_restrict = Column(BigInteger)
+    funds_unrestrict = Column(BigInteger)
+    funds_total = Column(BigInteger)
+    employees = Column(Integer)
+    volunteers = Column(Integer)
     cons_acc = Column(Text)
     charity_acc = Column(Text)
     source_key = Column(Integer, ForeignKey('data_source.source_key'), nullable=False)
-
 
 
 class EW_Registration(Base):
