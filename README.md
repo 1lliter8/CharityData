@@ -9,6 +9,13 @@ Who knows, maybe even a snappier name. The sky's the limit.
 
 * Basic build and import of England/Wales database NOW WORKING!
 
+## Working on
+
+### 27/6/20
+
+* Have temporarily abandoned data imports to work on some analysis. See `/analysis/` folder
+* Working in R. Shaping financial data and exploring.
+
 ## Similar projects
 * [Find that charity](https://findthatcharity.uk/)
 * [Open Charities](http://opencharities.org/)
