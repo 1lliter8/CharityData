@@ -18,11 +18,13 @@ class PopulateEW:
         self.wd = wd
 
     def bcptosql(self, file, name, source, index=False):
+        """
         # Clears anything in the table with a different source code
         d = self.md.tables[name]\
             .delete(bind=self.engine)\
             .where(self.md.tables[name].c.source_key != source)
         d.execute()
+        """
 
         # Reads BCP file to csv StringIO buffer
         fbuf = io.StringIO()
@@ -71,9 +73,21 @@ class PopulateEW:
         key = s.execute()
         return key.inserted_primary_key[0]
 
+    def clearsource(self, source):
+        # Clears anything in the database with a different source code
+        for table in reversed(self.md.sorted_tables):
+            if table.name != 'data_source':
+                d = table.delete(bind=self.engine)\
+                    .where(table.c.source_key != source)
+                d.execute()
+                readout = '{table}, {time}: Successfully cleared'.format(table=table.name,
+                                                                         time=datetime.now())
+                print(readout)
+
     def bcpimports(self):
         # Runs all working BCP import scripts
         source = self.gensource(os.path.split(os.path.dirname(self.wd))[-1])
+        self.clearsource(source)
 
         self.bcptosql(file='extract_aoo_ref.bcp',
                       name='ew_aoo_ref',
@@ -149,8 +163,10 @@ class PopulateEW:
 
 if __name__ == '__main__':
     # TODO: Test data integrity with some queries, start work on Scotland tables
+    #   This will mean rejigging clearsource()
+
     os.chdir('..')
-    pop = PopulateEW('downloads/RegPlusExtract_May_2020/',
+    pop = PopulateEW('downloads/RegPlusExtract_July_2020/',
                       'localhost', 'CCEng', pw.us, pw.pw)
 
     print('Import begun at {time}'.format(time=datetime.now()))
