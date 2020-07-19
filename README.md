@@ -16,6 +16,10 @@ Who knows, maybe even a snappier name. The sky's the limit.
 * Have temporarily abandoned data imports to work on some analysis. See `/analysis/` folder
 * Working in R. Shaping financial data and exploring.
 
+### 19/7/20
+
+* Produced a dummy marketing selection. See workbooks folder
+
 ## Similar projects
 * [Find that charity](https://findthatcharity.uk/)
 * [Open Charities](http://opencharities.org/)
