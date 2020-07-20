@@ -3,10 +3,10 @@ title: "Crisis UK trusts and foundations mailing"
 author: "Will Langdale"
 date: "July 19, 2020"
 output:
-  pdf_document: 
-    toc_depth: 4
   html_document:
     df_print: paged
+  pdf_document: 
+    df_print: tibble
 ---
 ```{r notes, include = FALSE}
 # Notes for a first-time Rmd user
@@ -37,6 +37,7 @@ library(scales)
 library(rnaturalearth)
 library(knitr)
 opts_knit$set(root.dir = 'C:\\Users\\willl\\PycharmProjects\\CharityData')
+opts_chunk$set(fig.align = 'center')
 ```
 ```{r sqlscript, include = FALSE, , echo=FALSE}
 source('.\\analysis\\_connectscript.R')
@@ -44,7 +45,7 @@ source('.\\analysis\\_connectscript.R')
 
 This is a quick project to use the Charity Commission's database of registered charities in England and Wales to create a mailing file. Note this project is not in any way affiliated with Crisis UK.
 
-## 0. Contents
+# 0. Contents
 
 1. Task overview
     + Method
@@ -66,7 +67,9 @@ This is a quick project to use the Charity Commission's database of registered c
     + subno
 6. Notes
 
-## 1. Task overview
+\newpage
+
+# 1. Task overview
 
 > In 2019 Crisis UK's income from charitable Trusts and Foundations (T&F) was £540k. To help grow this figure, the team have decided to put on a series of open days at their 11 Skylight Centres, and invite the trustees of interested charitable organisations to see the impact their gifts might have there.
 > 
@@ -87,7 +90,7 @@ The eventual file will support a letter from the director of the local Skylight 
 
 **Segmentation by Skylight Centre** and distance will help the T&F team to tailor their letter by locale. Charities within a few miles might get a letter more focused on geographical benefits.
 
-### Method
+## Method
 
 1) Pull all charities whose way of working includes making grants to organisations into a dataframe
 2) Add my segmentation scores one by one
@@ -95,11 +98,13 @@ The eventual file will support a letter from the director of the local Skylight 
 4) Create second dataframe of clean contact details
 5) Join and export to .csv for delivery to client
 
-### Disclaimer
+## Disclaimer
 
 This project was done in R and this report produced in R Markdown. This project is in no way affiliated with Crisis UK, and is a purely academic task to help show and develop my skills with data. I chose Crisis because I think homelessness is one of the starkest failings of our society, and every day it continues to exist is an indictment of the systems that are supposed to make our society a safe, happy place to live.
 
-## 2. Raw selection
+\newpage
+
+# 2. Raw selection
 
 Note some scripts for querying my database that include sensitive information have been quietly loaded, as has `tidyverse`, `geosphere`, `scales`, `rnaturalearth` and `stringr.`
 
@@ -114,7 +119,7 @@ ewtrusts <- runquery(sql = 'select ew_class.ewclass, ew_charity.*
 
 Then copy selection barebones to my propensity table.
 
-```{r rawprop}
+```{r rawprop, warning = FALSE}
 ewtrusts_prop <- ewtrusts %>% 
   select(regno, subno, name) %>% 
   tibble()
@@ -123,11 +128,13 @@ ewtrusts_prop %>%
   print(n = 10)
 ```
 
-## 3. Segmentation
+\newpage
+
+# 3. Segmentation
 
 We're going to slowly build these variables and add them to `ewtrusts_prop` as we go.
 
-### i) Charitable purpose
+## i) Charitable purpose
 
 There are two ways of approaching this. One is to look at the `objects` table and use text analysis to create a propensity score for how well each charity's object matches Crisis UK's. I spent quite a bit of time on this, but didn't hone it enough to be useful. See the next steps section for more information.
 
@@ -145,7 +152,7 @@ sharedaims <- runquery(sql = 'select regno, ewclass
 
 `101` General, and `105` Poverty are particularly interesting but `107` is the standout -- Housing.
 
-```{r purpose_calc}
+```{r purpose_calc, warning = FALSE}
 
 sharedaims_asktype <- sharedaims %>% 
   filter(ewclass == '105' | ewclass == '107' | ewclass == '101') %>% 
@@ -196,7 +203,7 @@ ewtrusts_prop <- ewtrusts_prop %>%
 
 ```
 
-### ii) Expenditure
+## ii) Expenditure
 
 We'll use 2019 expenditure to check that the trust is actively making gifts, then look at the size of their expenditure to get an idea of their size. We're using this because lots of charities are slow, COVID-19 has slowed them more, and FY1920 data isn't as up to date as it could be right now.
 
@@ -258,7 +265,7 @@ ewtrusts_prop %>%
 
 Let's look at some counts.
 
-```{r expend_count_low}
+```{r expend_count_low, warning = FALSE}
 ewtrusts_prop %>% 
   mutate(expendcat = cut(expend2019, 
                          breaks = c(25000, 50000, 100000, Inf),
@@ -272,7 +279,7 @@ That's a lot in the high section! We should look at resegmenting. Let's plot fro
 
 Again, there seem to be some logical places to cut this data.
 
-```{r expend_graph_high, echo = FALSE, fig.align = 'center'}
+```{r expend_graph_high, echo = FALSE, fig.align = 'center', warning = FALSE}
 ewtrusts_prop %>%
   select(expend2019, asktype) %>% 
   filter(expend2019 > 100000 & expend2019 < 3000000) %>% 
@@ -293,7 +300,7 @@ ewtrusts_prop %>%
 
 Now the counts, this time including our slices across both plots.
 
-```{r expend_counts_high}
+```{r expend_counts_high, warning = FALSE}
 ewtrusts_prop %>% 
   mutate(expendcat = cut(expend2019, 
                          breaks = c(25000, 50000, 100000, 300000, 800000, 2100000, Inf),
@@ -312,7 +319,7 @@ ewtrusts_prop <- ewtrusts_prop %>%
                          labels = c('vsml', 'sml', 'med', 'hmed', 'hgh', 'vhgh')))
 ```
 
-### iii) Nearest Centre
+## iii) Nearest Centre
 
 This mailing is essentially all about geography. We need to know we're asking trusts with a vested interest in each Skylight Centre to help support it. That could be the centre serving a similar community to the trust, or that the trust itself is geographically nearby.
 
@@ -320,7 +327,7 @@ There are two ways of approaching this. The first is to look at the postcode of 
 
 By combining these two methods, we should get a good idea of the best place to invite the trustees to visit, and to potentially make a gift to support.
 
-#### Postcode distance
+### Postcode distance
 
 We need the postcodes of both the trusts and the Skylight Centres, and the latitude and longitude of each.
 
@@ -454,7 +461,7 @@ ewtrusts_prop <- ewtrusts_prop %>%
   left_join(trustpostcodes_topdist)
 ```
 
-#### Area of benefit
+### Area of benefit
 
 Not all trusts are located where they work. A charity based in Cambridge might help people living in London, for example. Luckily, these areas of benefit are declared, and when the closest Skylight Centre doesn't match our postcode analysis, this will be the preferred method of identifying the best place to invite the trustees to.
 
@@ -625,7 +632,9 @@ ewtrusts_prop <- ewtrusts_prop %>%
   anti_join(ew_aoo_suppress)
 ```
 
-## 4. Mailing file
+\newpage
+
+# 4. Mailing file
 
 With our locations and propensities in place, we're ready to produce a single mailing file for the T&F team to use. We need to filter out the charities we definitely don't want, then produce a file with the following columns:
 
@@ -634,7 +643,7 @@ With our locations and propensities in place, we're ready to produce a single ma
 * Charitable purpose segment
 * Appropriate Skylight Centre to invite to, its distance, and centre signatory
 
-### Filtering the selection
+## Filtering the selection
 
 Our huge file has lots of charities the T&F team are definitely not going to want to speak to. Here we get rid of:
 
@@ -657,7 +666,7 @@ ewtrusts_prop_filt <- ewtrusts_prop %>%
 
 Count of centre vs ask type.
 
-```{r mail_filter_count1, echo = FALSE}
+```{r mail_filter_count1, echo = FALSE, warning = FALSE}
 ewtrusts_prop_filt %>% 
   count(centre_pc, asktype) %>% 
   drop_na() %>% 
@@ -668,7 +677,7 @@ ewtrusts_prop_filt %>%
 
 Count of centre vs charity expenditure segment.
 
-```{r mail_filter_count2, echo = FALSE}
+```{r mail_filter_count2, echo = FALSE, warning = FALSE}
 ewtrusts_prop_filt %>% 
   count(centre_pc, expendcat) %>% 
   drop_na() %>% 
@@ -681,7 +690,7 @@ Count of ask type vs charity expenditure segment.
 
 I actually think this is one of the most important plots for the T&F team to look at. Using this, we can begin thinking about who we might cut from the mailing in order to make it as efficient as possible.
 
-```{r mail_filter_count3, echo = FALSE}
+```{r mail_filter_count3, echo = FALSE, warning = FALSE}
 ewtrusts_prop_filt %>% 
   count(asktype, expendcat) %>% 
   drop_na() %>% 
@@ -705,11 +714,11 @@ ggplot(filter(ewtrusts_prop_filt, !is.na(centre_pc), centre_pc != 'Edinburgh'),
 
 Final count is 3,277, though it's likely there'll be plenty of charities the T&F team will want to filter down even further to remove. See next steps for discussion.
 
-### Producing the outfile
+## Producing the outfile
 
 We're going to create a fresh dataframe and start joining the information we want. Most of it has already been loaded elsewhere, it's just a case of shaping and mixing.
 
-#### Variables from propensity data
+### Variables from propensity data
 
 We can get `regno`, `name`, expenditure variables, purpose variables and the various Skylight Centres straight from the propensity dataframe. 
 
@@ -728,7 +737,7 @@ ewtrusts_mailout <- ewtrusts_prop_filt %>%
   mutate(name = trimws(name))
 ```
 
-#### Address
+### Address
 
 We can very easily get this from our original SQL query. It just needs some quick formatting.
 
@@ -765,7 +774,7 @@ ewtrusts_mailout <- ewtrusts_mailout %>%
   left_join(ewtrusts_adds)
 ```
 
-#### Export to csv
+### Export to csv
 
 With all our variables in order and contact details attached, it's time to turn this into a file the T&F team can use.
 
@@ -777,7 +786,9 @@ See next steps section (below) for how we might proceed from here.
 write_csv(ewtrusts_mailout, '.\\analysis\\workbooks\\crisisselection_jul20_v1_outfile.csv')
 ```
 
-## 5. Next steps
+\newpage
+
+# 5. Next steps
 
 Next steps would likely be:
 
@@ -788,7 +799,7 @@ Next steps would likely be:
 
 I also had some thoughts on the limitations and implications of this piece of work, which might produce some insight into the direction of the next (fictional) iteration of this selection.
 
-### Accuracy of selection and missing data
+## Accuracy of selection and missing data
 
 The elephant in the room with this selection is that I don't have Crisis' fundraising database. This would be a huge, huge boon to accomplishing this task because we'd be able to look at charities who had given in the past, when, how their gift size related to that year's expenditure, etc. We could start consiering some really powerful approaches, like using machine learning to perform a regression analysis that predicts, based on existing gifts, who in the database would likely be worth approaching.
 
@@ -802,7 +813,7 @@ Lastly, Scotland and Northern Ireland aren't included in the Charity Commission'
 
 **Including Scottish charities in the analysis would be a useful next step.**
 
-### Text mining and tf-idf
+## Text mining and tf-idf
 
 `Tf-idf`, or text frequency-interdocument frequency, is a way of using an overall document corpus to quickly find the words (or n-grams) that make a particular document within that corpus unique. I tried using it to find commonalities between charitable objects. The idea was to help find charities with non-specific aims but with similar values to Crisis UK, without discounting things like religious charities who don't restrict themselves to their own faith. I ran into two problems.
 
@@ -863,31 +874,33 @@ Secondly, the corpus I'd actually like access to, 'aims and activities' (from th
 
 **Next steps could be a quick scrape to add this to my database.**
 
-### Trustees
+## Trustees
 
 Because we have the data for trustees, it might be worth creating a network of which trustees existing supporting organisations have in common with other charities that might also be inclined to support. We could even ask the common link to be the letter signatory.
 
 The database unfortunately doesn't contain a correspondent name (even though it's in the data definition), and using trustee data as our 'to' name would potentially increase our open and invite success rate. I didn't do it because it carries risks too -- there's nothing in the data to show the Chair, and there's often too many trustees to invite every single one. Getting it wrong is a reputational risk, and a big one when working with this kind of targeted mailing to some wealthy, powerful organisations.
 
-### Expenditure
+## Expenditure
 
 I used a very manual method to segment expenditure, constructing histograms then slicing by informed intuition. Other approaches could have distributed the segments evenly by count, or potentially even a machine learning-based cluster analysis of the `part-b` table, where different types of income and expenditure are broken down.
 
 One next step could be to perform all three methods, then compare to see which produces the most useful segmentation of the financial data. Domain knowledge from the T&F team would be particularly useful to working this out.
 
-### Other languages
+## Other languages
 
 There's features in the database to potentially accommodate contacting people in their preferred language if it's Welsh or English. This would likely make a difference to the propensity for charities to support the Skylight Centre in Swansea.
 
 For now, as much I strongly believe in the importance of doing this, is was a layer of complication too far for my analysis.
 
-### subno
+## subno
 
 I realised quite late in the selection that `subno` is basically useless for my analysis, but so much of the code turns itself upside down to accommodate it that I decided it was easier to leave it in -- for now. In the [data definition](http://data.charitycommission.gov.uk/data-definition.aspx) half the tables don't even use `subno`, including really important things like area of benefit. It's basically safe to filter on `subno == 0` and strip it, and that would have saved me a lot of hassle.
 
 **One next step might be to pull `subno` out of the code entirely.**  But for now it's there, causing useless `unite` and `separate`s and other fun. You live and learn!
 
-## 6. Notes
+\newpage
+
+# 6. Notes
 
 Below are some of the files and resources I used for reference, and to aid replication. Thanks very much for reading this far. Please feel free to get in touch at [wpflangdale@gmail.com](mailto://wpflangdale@gmail.com) or visit my [GitHub](https://github.com/1lliter8/).
 
